@@ -1,0 +1,82 @@
+[
+  {
+    "question": "LangChain 的核心定位是什么？",
+    "ground_truth": "LangChain 是最早成名、生态最丰富的 LLM 应用开发框架，定位是全能型应用开发框架和模块化胶水包工头——大模型时代的Spring Boot：把各家大模型（OpenAI、通义千问等）的 API 做了统一抽象，就像 Spring Data 统一了各种数据库的 CRUD 一样"
+  },
+  {
+    "question": "LangGraph 的核心总结？",
+    "ground_truth": "LangGraph 的流式输出，本质是把大模型的思考过程和状态机的流转过程全部变成数据流（Data Stream）。三种流模式可组合使用；流式输出底层依赖 Checkpointer 的状态管理机制"
+  },
+  {
+    "question": "AutoGen 是什么？",
+    "ground_truth": "AutoGen 是由微软研究院（Microsoft Research）推出的开源多智能体编程框架。它的核心哲学是：**让智能体通过“对话（Conversation）”来协作**。结合我们之前的理论，AutoGen 完美契合了混合式架构和群聊协作模式：它支持智能体之间通过自然语言或代码进行通信（解决通信协议问题）。它内置了沙箱环境，支持代码的“编写-运行-修复”闭环（解决工具校验与纠错问题）。它原生支持“人在回路（Human-in-the-loop）”，让人类在关键节点介入（解决复杂任务的兜底问题）"
+  },
+  {
+    "question": "LlamaIndex 的核心定位是什么？",
+    "ground_truth": "RAG 领域的检索专家，解决 LLM 知识断层问题——大模型不知道企业私有文档，LlamaIndex 就是那座桥。数据为王、检索至上。专注于把私有数据最好地喂给大模型"
+  },
+  {
+    "question": "MCP 是什么？",
+    "ground_truth": "MCP（Model Context Protocol，模型上下文协议）是一个标准化协议，让 AI 像插 USB 线一样即插即用地获取外部数据（Resources）和调用工具（Tools）"
+  },
+  {
+    "question": "SSE 的核心本质是什么？",
+    "ground_truth": "SSE（Server-Sent Events） 是基于标准 HTTP 协议的、服务器向客户端单向实时推送数据的技术，属于 HTML5 规范。核心本质：从请求-响应到长连接数据流- 传统 HTTP：客户端发请求 → 服务端处理完 → 返回完整数据包 → 连接断开；- SSE：客户端发一次请求 → 服务端不关连接（Keep-Alive）→ 声明接下来是流→ 服务端可随时持续推送数据碎片。"
+  },
+  {
+    "question": "LangGraph 和 LangChain 的区别是什么？",
+    "ground_truth": "LangChain 统一抽象层、组件化工具箱、编排任务的流水线，不止统一返回格式（数据结构），更统一了行为协议——所有组件支持 invoke（同步）、stream（流式）、batch（批量）。组件实现标准接口后，可用一行管道符代码无缝串联，无需胶水代码。LangGraph 之于 LangChain，就像 Spring StateMachine（状态机）+ 工作流引擎（Camunda/Flowable） 之于 Spring MVC：把复杂 AI 任务显式建模为一张有向图，解决复杂任务编排、状态持久化和异常处理问题。定义了State、Node、Edge、Graph"
+  },
+  {
+    "question": "RAG 和 rerank 的区别和联系？",
+    "ground_truth": "RAG（Retrieval-Augmented Generation，检索增强生成）的本质是将大模型（LLM）与外部知识库结合，解决大模型知识滞后和幻觉问题。重排序是解决大模型信息包含的噪声、注意力分散和上下文产生幻觉。rerank 是解决 RAG 流程的中一个问题"
+  },
+  {
+    "question": "SSE 和 MCP 的区别和联系？",
+    "ground_truth": "MCP（Model Context Protocol，模型上下文协议）是一个标准化协议，让 AI 像插 USB 线一样即插即用地获取外部数据（Resources）和调用工具（Tools）。SSE（Server-Sent Events） 是基于标准 HTTP 协议的、服务器向客户端单向实时推送数据的技术，属于 HTML5 规范。核心本质：从请求-响应到长连接数据流- 传统 HTTP：客户端发请求 → 服务端处理完 → 返回完整数据包 → 连接断开；- SSE：客户端发一次请求 → 服务端不关连接（Keep-Alive）→ 声明接下来是流→ 服务端可随时持续推送数据碎片。SSE是一个具体的技术工具，这个工具的技术规范可以是MCP"
+  },
+  {
+    "question": "LangChain Memory 和 LangGraph 的 Checkpointer 有什么区别？",
+    "ground_truth": "LangChain 的 Memory 本质是上下文拼接器 + 缓存管理器，分三层：第 1 层：核心存储层 ChatMessageHistory（≈ Session/Redis）- 默认存 Python 进程内存（相当于 HashMap），重启即失；- 生产环境用 RedisChatMessageHistory 或 PostgreSQL 持久化，支持多用户、多会话（Session ID）隔离。第 2 层：核心调度层 RunnableWithMessageHistory（≈ Spring Filter/Interceptor）- 作为包装器拦截请求：按 session_id 自动拉历史消息 → 拼进 Prompt → 发大模型 → 返回后自动把新消息存回存储层；- 业务逻辑和状态管理完全解耦，符合单一职责原则。第 3 层：策略层 Memory Classes（≈ 缓存淘汰/压缩算法）Checkpointer 本质是游戏存档系统，工程上等同于带版本控制的分布式 Session 管理器 "
+  },
+  {
+    "question": "LlamaIndex 和 LangChain 的区别和联系？",
+    "ground_truth": "- 核心定位：RAG 领域的检索专家，解决 LLM 知识断层问题——大模型不知道企业私有文档，LlamaIndex 就是那座桥。- 核心哲学：数据为王、检索至上。专注于把私有数据最好地喂给大模型。 LangChain 是最早成名、生态最丰富的 LLM 应用开发框架，定位是全能型应用开发框架和模块化胶水包工头——大模型时代的Spring Boot：把各家大模型（OpenAI、通义千问等）的 API 做了统一抽象，就像 Spring Data 统一了各种数据库的 CRUD 一样。一个是数据库层面的，一个是封装工具层面的"
+  },
+  {
+    "question": "LLM 是 MCP Server？",
+    "ground_truth": "绝对不是。LLM 是推理引擎（大脑），负责理解意图、决定是否需要工具、生成结构化工具调用请求；MCP Server 是工具网关（手和眼），只负责验证请求、执行操作、返回结果"
+  },
+  {
+    "question": "MCP 与 Function Calling 是竞争关系？",
+    "ground_truth": "互补。Function Calling 是模型输出调用意图的模型侧能力；MCP 是工具以标准服务形式存在的工程侧协议。MCP 的价值：工具与 AI 应用解耦（加新工具零改动）、复用（一个 Server 被多个 AI 应用使用）、动态发现（Client 可查询 Server 有哪些工具）。选型：工具少、变化少、单应用 → 直接 Function Calling 够了；工具多、变化频繁、多应用共享 → 用 MCP"
+  },
+  {
+    "question": "什么是纳什均衡？",
+    "ground_truth": "一种策略稳定状态——所有智能体都选定最优策略后，没有任何一个能通过单方面改变策略获得更多好处。这不是按劳分配，而是我不动，因为改变对我没好处（囚徒困境的双输僵局也是纳什均衡"
+  },
+  {
+    "question": "什么是夏普利值？",
+    "ground_truth": "合作博弈的分配概念，所得与贡献相等——不看辛苦程度，只看缺了你，团队会少赚多少；计算方式是穷举所有结盟顺序，算每个参与者的边际贡献平均值。用于防搭便车：贡献大的分得多，零贡献分 0"
+  },
+  {
+    "question": "今天北京天气如何？",
+    "ground_truth": "知识库中未找到相关信息"
+  },
+  {
+    "question": "今天吃了几个苹果？",
+    "ground_truth": "知识库中未找到相关信息"
+  },
+  {
+    "question": "今天在幼儿园好好吃饭了吗？",
+    "ground_truth": "知识库中未找到相关信息"
+  },
+  {
+    "question": "啥是博弈论啊？",
+    "ground_truth": "博弈论——MAS 的社会法则- 纳什均衡（Nash Equilibrium）：一种策略稳定状态——所有智能体都选定最优策略后，没有任何一个能通过单方面改变策略获得更多好处。这不是按劳分配，而是我不动，因为改变对我没好处（囚徒困境的双输僵局也是纳什均衡）。- 夏普利值（Shapley Value）：合作博弈的分配概念，所得与贡献相等——不看辛苦程度，只看缺了你，团队会少赚多少；计算方式是穷举所有结盟顺序，算每个参与者的边际贡献平均值。用于防搭便车：贡献大的分得多，零贡献分 0。"
+  },
+  {
+    "question": "大模型幻觉能根除吗？",
+    "ground_truth": "幻觉是大模型生成式逻辑的底层特性，理论上无法 100% 根除，只能通过工程化手段系统性管控.RAG 不能根治幻觉，但能把不可查证的编造变成可追溯的错误，大幅降低修复成本"
+  }
+]

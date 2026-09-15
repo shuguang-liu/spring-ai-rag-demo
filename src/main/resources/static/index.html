@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>RAG 问答演示</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f6f8;
+            color: #1f2329;
+            padding: 32px 16px;
+            line-height: 1.7;
+        }
+        .container { max-width: 860px; margin: 0 auto; }
+
+        h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+        .subtitle { font-size: 13px; color: #8a9099; margin-bottom: 24px; }
+
+        /* 输入区 */
+        .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        #question {
+            flex: 1; padding: 12px 16px; font-size: 15px;
+            border: 1px solid #dcdfe6; border-radius: 8px;
+            outline: none; transition: border-color .2s;
+        }
+        #question:focus { border-color: #3370ff; }
+
+        /* ✅ 统一按钮样式（合并为一个选择器，避免重复代码） */
+        #askBtnSse, #askBtnFlux {
+            padding: 12px 28px; font-size: 15px; font-weight: 500;
+            background: #3370ff; color: #fff; border: none;
+            border-radius: 8px; cursor: pointer; transition: background .2s;
+            white-space: nowrap; /* 防止按钮文字换行 */
+        }
+        #askBtnSse:hover:not(:disabled), #askBtnFlux:hover:not(:disabled) {
+            background: #2860e1;
+        }
+        #askBtnSse:disabled, #askBtnFlux:disabled {
+            background: #b8c4d9; cursor: not-allowed;
+        }
+
+        /* 状态栏 */
+        .status {
+            display: none; align-items: center; gap: 8px;
+            padding: 10px 16px; margin-bottom: 16px;
+            background: #eef4ff; border-radius: 8px;
+            font-size: 14px; color: #3370ff;
+        }
+        .status.active { display: flex; }
+        .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #3370ff; animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        /* 思考面板 */
+        .think-panel {
+            display: none; margin-bottom: 16px;
+            border-left: 3px solid #c9cdd4;
+            padding: 8px 14px; background: #fafbfc;
+            font-size: 13px; color: #646a73;
+        }
+        .think-panel.active { display: block; }
+        .think-panel .label { font-weight: 600; color: #8a9099; margin-right: 6px; }
+
+        /* 回答区 */
+        .answer {
+            background: #fff; border-radius: 12px;
+            padding: 24px; min-height: 80px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06);
+            font-size: 15px; white-space: pre-wrap; word-break: break-word;
+        }
+        .answer:empty::before {
+            content: "回答会显示在这里…";
+            color: #b8bcc4;
+        }
+        /* 打字机光标 */
+        .cursor::after {
+            content: "▋"; color: #3370ff;
+            animation: blink .8s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>RAG 知识库问答</h1>
+    <p class="subtitle">向量检索 + Rerank 精排 + 流式生成</p>
+
+    <div class="input-row">
+        <input id="question" placeholder="输入你的问题，例如：LangChain 的核心定位是什么？"
+               onkeydown="if(event.key==='Enter') ask(1)">
+        <button id="askBtnSse" onclick="ask(1)">提问SSE</button>
+        <button id="askBtnFlux" onclick="ask(2)">提问FLUX</button>
+    </div>
+
+    <div id="status" class="status">
+        <span class="dot"></span>
+        <span id="statusText"></span>
+    </div>
+
+    <div id="thinkPanel" class="think-panel">
+        <span class="label">思考过程</span><span id="thinkText"></span>
+    </div>
+
+    <div id="answer" class="answer"></div>
+</div>
+
+<script>
+    let es = null;
+
+    const STATE_TEXT = {
+        RETRIEVING: "正在检索知识库…",
+        RERANKING:  "正在重排序…",
+        GENERATING: "正在生成回答…",
+        TOOL_CALLING: "正在调用工具",
+        DONE:       "完成",
+        ERROR:      "出错了"
+    };
+
+    function ask(type) {
+        const q = document.getElementById("question").value.trim();
+        if (!q) return;
+
+        const btnSse = document.getElementById("askBtnSse");
+        const btnFlux = document.getElementById("askBtnFlux");
+
+        // 重置 UI
+        document.getElementById("answer").textContent = "";
+        document.getElementById("answer").classList.add("cursor");
+        document.getElementById("thinkText").textContent = "";
+        document.getElementById("thinkPanel").classList.remove("active");
+        btnSse.disabled = true;
+        btnFlux.disabled = true;
+        setStatus("RETRIEVING");
+
+        // 关掉上一次连接
+        if (es) es.close();
+
+        if (type === 1) {
+            es = new EventSource("http://localhost:9092/api/sse/ask/stream?question=" + encodeURIComponent(q));
+        } else if (type === 2) {
+            es = new EventSource("http://localhost:9092/api/sse/ask/stream/flux?question=" + encodeURIComponent(q));
+        }
+
+        // 定义一个恢复按钮状态的公共函数
+        const enableButtons = () => {
+            btnSse.disabled = false;
+            btnFlux.disabled = false;
+        };
+
+        es.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+
+            if (data.state) {
+                if (data.state === "DONE") {
+                    setStatus(null);
+                    document.getElementById("answer").classList.remove("cursor");
+                    enableButtons();
+                    es.close();
+                } else if (data.state === "ERROR") {
+                    setStatus("ERROR");
+                    document.getElementById("answer").classList.remove("cursor");
+                    enableButtons();
+                    es.close();
+                } else {
+                    setStatus(data.state);
+                }
+            }
+
+            if (data.think) {
+                document.getElementById("thinkPanel").classList.add("active");
+                document.getElementById("thinkText").textContent = data.think;
+            }
+
+            if (data.message) {
+                document.getElementById("answer").textContent += data.message;
+            }
+        };
+
+        es.onerror = () => {
+            setStatus("ERROR");
+            document.getElementById("answer").classList.remove("cursor");
+            enableButtons();
+            es.close();
+        };
+    }
+
+    function setStatus(state) {
+        const bar = document.getElementById("status");
+        if (!state) { bar.classList.remove("active"); return; }
+        bar.classList.add("active");
+        document.getElementById("statusText").textContent = STATE_TEXT[state] || state;
+    }
+</script>
+</body>
+</html>

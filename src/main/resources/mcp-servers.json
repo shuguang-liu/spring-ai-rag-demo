@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "customer-service-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "com.example",
+        "--port=9092"
+      ]
+    }
+  }
+}

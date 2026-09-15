@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: spring-ai-demo
+  profiles:
+    active: dev
+#  ai:
+#    mcp:
+#      server:
+#        name: customer-service-mcp
+#        version: 1.0.0
+#        protocol: STREAMABLE
+#
+#      client:
+#        enabled: true
+#        name: spring-ai-mcp-client
+#        type: async
+#        initialized: true
+#        # 连接本地 MCP Server的配置
+##        stdio:
+##          servers-configuration: classpath:mcp-servers.json
+#        # 远程 MCP Server的配置
+#        toolcallback:
+#          enabled: true
+#        streamable-http:
+#          connections:
+#            self-server:
+#              url: http://localhost:9093   # MCP Server 地址
+#              endpoint: /mcp
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+
+
+server:
+  port: 9092
+
+file:
+  path: docs/note

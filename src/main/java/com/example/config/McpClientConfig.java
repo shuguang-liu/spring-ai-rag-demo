@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author liushug
- * @date 2026/9/15 15:35
  * @description MCP配置类
  */
 @Configuration

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author liushug
- * @date 2026/9/14 21:29
  * @description 重排配置类
  */
 @Data

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author liushug
- * @date 2026/8/17 11:16
  * @description Agent 的记忆--用来标识用户身份
  */
 @Component

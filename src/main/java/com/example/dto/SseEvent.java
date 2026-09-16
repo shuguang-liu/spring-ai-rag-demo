@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author liushug
- * @date 2026/9/14 22:06
  * @description SSE 事件
  */
 @NoArgsConstructor

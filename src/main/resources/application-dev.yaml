@@ -1,15 +1,23 @@
 spring:
-  DataSource:
-    url: jdbc:postgresql://192.168.42.128:15432/ai_demo
-    username: postgres
-    password: ${DB_PASSWORD}
+  datasource:
+    # dev 环境：本机没有 PG，远程连接服务器；同机部署时可设 DB_HOST=127.0.0.1 覆盖
+    # 第一个数据源：AI Agent 主库（未来 pgvector / checkpointer 使用）
+    primary:
+      url: jdbc:postgresql://${DB_HOST:8.141.88.84}:15432/ai_demo
+      username: postgres
+      password: ${DB_PASSWORD}
+    # 第二个数据源：登录鉴权专用库（t_user / t_anonymous_quota）
+    auth:
+      url: jdbc:postgresql://${DB_HOST:8.141.88.84}:15432/ai_auth
+      username: postgres
+      password: ${DB_PASSWORD}
   ai:
     openai:
       api-key: ${DASHSCOPE_API_KEY}
       base-url: https://dashscope.aliyuncs.com/compatible-mode
       chat:
         options:
-          model: qwen3.8-2.4t-a95b
+          model: qwen3.8-27b
       embedding:
         options:
           model: qwen3.7-text-embedding-flash
@@ -20,9 +28,6 @@ spring:
         distance-type: cosine_distance
         dimensions: 1024
         initialize-schema: true
-
-server:
-  port: 9092
 
 rag:
   retrievers:
